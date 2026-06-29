@@ -1,0 +1,1011 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - MemoryLog</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        /* HISTORY TABLE */
+        .history-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .history-container th {
+            position: sticky;
+            top: 0;
+            background-color: #6e8efb;
+            color: white;
+            z-index: 10;
+        }
+
+        /* ALERTS */
+        .alerts-section {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .alert-message {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .alert-message .icon {
+            font-size: 1.8rem;
+            margin-right: 15px;
+        }
+
+        .alert-message.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .alert-message.danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-logo">MemoryLog</div>
+        <div>
+            <span>Hi, {{ user }}</span>
+            <a href="/logout" class="btn-logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        
+        <h2>Daily Cognitive Exercises</h2>
+        <div class="games-grid">
+            <div class="game-card">
+                <div class="icon">🧩</div>
+                <h3>Matching</h3>
+                <a href="/test/matching" class="btn-play">Play</a>
+            </div>
+            <div class="game-card">
+                <div class="icon">📝</div>
+                <h3>Word Recall</h3>
+                <a href="/test/words" class="btn-play">Play</a>
+            </div>
+            <div class="game-card">
+                <div class="icon">💡</div>
+                <h3>Pattern</h3>
+                <a href="/test/pattern" class="btn-play">Play</a>
+            </div>
+        </div>
+
+        
+        <div class="alerts-section">
+            <h3>🔔 Test Reminders</h3>
+
+            {% if last_test_days is not none and last_test_days > 1 %}
+                <div class="alert-message warning">
+                    <span class="icon">🚨</span>
+                    You haven’t taken a test in {{ last_test_days }} days
+                </div>
+            {% elif last_test_days == 1 %}
+                <div class="alert-message warning">
+                    <span class="icon">🔔</span>
+                    You missed yesterday’s test
+                </div>
+            {% elif last_test_days == 0 %}
+                <div class="alert-message warning">
+                    <span class="icon">🕒</span>
+                    It’s time for today’s test
+                </div>
+            {% else %}
+                <div class="alert-message success">
+                    <span class="icon">✅</span>
+                    You are regularly taking tests
+                </div>
+            {% endif %}
+
+            <h3 style="margin-top:25px;">📉 Score Trend Analysis</h3>
+
+            {% if alert_status == 'danger' %}
+                <div class="alert-message danger">
+                    <span class="icon">❗</span>
+                    Consistent decline noticed in recent scores
+                </div>
+            {% elif alert_status == 'warning' %}
+                <div class="alert-message warning">
+                    <span class="icon">⚠️</span>
+                    Slight decline detected
+                </div>
+            {% else %}
+                <div class="alert-message success">
+                    <span class="icon">📈</span>
+                    Scores are stable or improving
+                </div>
+            {% endif %}
+        </div>
+        
+        <button onclick="sendLocation()" class="btn-primary">
+        🚨 Emergency Alert (Send Location)
+        </button>
+
+        <br><br>
+
+        <button onclick="setReminder()" class="btn-primary">
+            ⏰ Set Test Reminder
+        </button>
+
+        <script>
+        function setReminder() {
+            setTimeout(() => {
+                alert("⏰ Time to take your test!");
+            }, 10000);
+        }
+        </script>
+
+        
+        <div class="alerts-section">
+            <h3>🧠 Cognitive Assessment (10 Questions)</h3>
+            <p>Answer honestly to assess your current cognitive stage.</p>
+
+            <form method="POST" action="/assessment">
+
+                {% set questions = [
+                    "Do you forget recent conversations or events?",
+                    "Do you misplace items frequently?",
+                    "Do you struggle with daily routine activities?",
+                    "Do you feel confused about date or time?",
+                    "Do you get lost in familiar places?",
+                    "Do you have difficulty finding correct words?",
+                    "Do you repeat the same questions often?",
+                    "Do you struggle to concentrate or focus?",
+                    "Do you feel confused while handling money or bills?",
+                    "Do you need help from others for daily tasks?"
+                ] %}
+
+                {% for q in questions %}
+                    <p>{{ loop.index }}️⃣ {{ q }}</p>
+                    <select name="q{{ loop.index }}" required>
+                        <option value="0">No</option>
+                        <option value="1">Sometimes</option>
+                        <option value="2">Often</option>
+                    </select>
+                {% endfor %}
+
+                <button type="submit" class="btn-primary">Assess Cognitive Stage</button>
+            </form>
+
+            {% if session.assessment_result %}
+                <div class="alert-message
+                    {% if session.assessment_result == 'Normal' %}success
+                    {% elif session.assessment_result == 'Mild Cognitive Impairment' %}warning
+                    {% elif session.assessment_result == 'Moderate Dementia' %}warning
+                    {% else %}danger{% endif %}"
+                    style="margin-top:20px;">
+
+                    <span class="icon">🧠</span>
+                    Current Cognitive Stage:
+                    <b>{{ session.assessment_result }}</b>
+                </div>
+            {% endif %}
+        </div>
+
+        
+        {% if session.assessment_recommendations %}
+        <div class="alerts-section">
+            <h3>🩺 Doctor Recommendations</h3>
+            <ul style="line-height:1.8;">
+                {% for rec in session.assessment_recommendations %}
+                    <li>✔️ {{ rec }}</li>
+                {% endfor %}
+            </ul>
+            <p style="font-size:0.85rem; color:#777;">
+                ⚠️ This assessment is for awareness only and does not replace medical diagnosis.
+            </p>
+        </div>
+        {% endif %}
+
+        
+        <h3>Your Test History</h3>
+        <div class="history-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Game</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in history %}
+                    <tr>
+                        <td>{{ row['date'] }}</td>
+                        <td>{{ row['game'] }}</td>
+                        <td>
+                            <span class="score-badge"
+                                style="background:
+                                    {% if row['score'] >= 80 %}#28a745
+                                    {% elif row['score'] >= 50 %}#ffc107
+                                    {% else %}#dc3545{% endif %};
+                                    color:white;">
+                                {{ row['score'] }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3">No tests taken yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            font-family:'Poppins', sans-serif;
+            background:#020817;
+            color:white;
+            scroll-behavior:smooth;
+        }
+
+        .dashboard{
+            display:flex;
+            min-height:100vh;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar{
+            width:280px;
+            background:#1e293b;
+            padding:30px 20px;
+            position:sticky;
+            top:0;
+            height:100vh;
+        }
+
+        .logo{
+            font-size:34px;
+            font-weight:bold;
+            margin-bottom:50px;
+        }
+
+        .menu{
+            display:flex;
+            flex-direction:column;
+            gap:20px;
+        }
+
+        .menu a{
+            text-decoration:none;
+            color:white;
+            background:#334155;
+            padding:18px;
+            border-radius:12px;
+            text-align:center;
+            transition:0.3s;
+            font-size:16px;
+        }
+
+        .menu a:hover{
+            background:#475569;
+        }
+
+        /* MAIN */
+
+        .main{
+            flex:1;
+            padding:40px;
+        }
+
+        .main h1{
+            font-size:55px;
+            margin-bottom:35px;
+        }
+
+        /* RESULT CARD */
+
+        .result-card{
+            background:#1e293b;
+            padding:25px;
+            border-radius:18px;
+            margin-bottom:35px;
+            border-left:6px solid #2563eb;
+        }
+
+        .result-card h2{
+            font-size:32px;
+            margin-bottom:15px;
+        }
+
+        .result-score{
+            font-size:24px;
+            color:#60a5fa;
+            font-weight:bold;
+            margin-bottom:10px;
+        }
+
+        .result-status{
+            font-size:18px;
+            font-weight:bold;
+        }
+
+        /* TOP CARDS */
+
+        .top-cards{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:25px;
+            margin-bottom:40px;
+        }
+
+        .card{
+            background:#1e293b;
+            padding:40px;
+            border-radius:18px;
+            text-align:center;
+        }
+
+        .card h3{
+            font-size:30px;
+            margin-bottom:15px;
+        }
+
+        .card p{
+            font-size:50px;
+            font-weight:bold;
+        }
+
+        /* SECTION */
+
+        .section-title{
+            font-size:35px;
+            margin-bottom:25px;
+        }
+
+        .history-section{
+            margin-top:60px;
+        }
+
+        /* GOOGLE MAP */
+
+        #googleMap{
+            width:100%;
+            height:500px;
+            border:none;
+            border-radius:18px;
+            background:white;
+        }
+
+        /* GAMES */
+
+        .games-grid{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:25px;
+        }
+
+        .game-card{
+            background:#1e293b;
+            padding:30px;
+            border-radius:18px;
+            text-align:center;
+            transition:0.3s;
+        }
+
+        .game-card:hover{
+            transform:translateY(-5px);
+        }
+
+        .game-icon{
+            font-size:50px;
+            margin-bottom:20px;
+        }
+
+        .game-card h3{
+            font-size:28px;
+            margin-bottom:15px;
+        }
+
+        .game-card p{
+            color:#cbd5e1;
+            margin-bottom:25px;
+            line-height:1.6;
+        }
+
+        .play-btn{
+            text-decoration:none;
+            background:#2563eb;
+            color:white;
+            padding:12px 28px;
+            border-radius:10px;
+            display:inline-block;
+            border:none;
+            cursor:pointer;
+            margin-top:20px;
+        }
+
+        .play-btn:hover{
+            background:#1d4ed8;
+        }
+
+        /* TABLE */
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            background:#1e293b;
+            border-radius:15px;
+            overflow:hidden;
+        }
+
+        th{
+            background:#334155;
+            padding:18px;
+            text-align:left;
+        }
+
+        td{
+            padding:18px;
+            border-bottom:1px solid #334155;
+        }
+
+        tr:hover{
+            background:#273449;
+        }
+
+        .score-badge{
+            padding:8px 15px;
+            border-radius:8px;
+            color:white;
+            font-weight:bold;
+        }
+
+        select{
+            width:100%;
+            padding:12px;
+            border-radius:10px;
+            border:none;
+            font-size:15px;
+            margin-top:15px;
+        }
+
+        /* RESPONSIVE */
+
+        @media(max-width:1000px){
+
+            .dashboard{
+                flex-direction:column;
+            }
+
+            .sidebar{
+                width:100%;
+                height:auto;
+                position:relative;
+            }
+
+            .top-cards{
+                grid-template-columns:1fr;
+            }
+
+            .games-grid{
+                grid-template-columns:1fr;
+            }
+
+            .main h1{
+                font-size:40px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <!-- SIDEBAR -->
+
+    <div class="sidebar">
+
+        <div class="logo">
+            🧠 MemoryLog
+        </div>
+
+        <div class="menu">
+
+            <a href="/dashboard">
+                Dashboard
+            </a>
+
+            <a href="#games">
+                Games
+            </a>
+
+            <a href="#assessment">
+                Assessment
+            </a>
+
+            <a href="#history">
+                History
+            </a>
+
+            <a
+                href="#location"
+                onclick="shareLocation()"
+            >
+
+                📍 Location
+
+            </a>
+
+            <a href="/logout">
+                Logout
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- MAIN -->
+
+    <div class="main">
+
+        <h1>
+            Patient Dashboard
+        </h1>
+
+        <!-- ASSESSMENT RESULT -->
+
+        {% if session.assessment_result %}
+
+        <div class="result-card">
+
+            <h2>
+                🧠 Assessment Result
+            </h2>
+
+            <p class="result-score">
+
+                Cognitive Score:
+                {{ session.assessment_result }}
+
+            </p>
+
+            {% if session.assessment_result <= 5 %}
+
+                <p
+                    class="result-status"
+                    style="color:#22c55e;"
+                >
+
+                    Status:
+                    Normal Cognitive Health
+
+                </p>
+
+            {% elif session.assessment_result <= 12 %}
+
+                <p
+                    class="result-status"
+                    style="color:#facc15;"
+                >
+
+                    Status:
+                    Mild Cognitive Decline
+
+                </p>
+
+            {% else %}
+
+                <p
+                    class="result-status"
+                    style="color:#ef4444;"
+                >
+
+                    Status:
+                    High Dementia Risk
+
+                </p>
+
+            {% endif %}
+
+        </div>
+
+        {% endif %}
+
+        <!-- TOP CARDS -->
+
+        <div class="top-cards">
+
+            <div class="card">
+
+                <h3>
+                    Latest Score
+                </h3>
+
+                <p>
+
+                    {% if history %}
+                        {{ history[0]['score'] }}
+                    {% else %}
+                        0
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+            <div class="card">
+
+                <h3>
+                    Tests Taken
+                </h3>
+
+                <p>
+                    {{ history|length }}
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- GAMES -->
+
+        <div
+            id="games"
+            class="history-section"
+        >
+
+            <div class="section-title">
+                Cognitive Games
+            </div>
+
+            <div class="games-grid">
+
+                <div class="game-card">
+
+                    <div class="game-icon">
+                        🧩
+                    </div>
+
+                    <h3>
+                        Matching
+                    </h3>
+
+                    <p>
+                        Improve memory and concentration.
+                    </p>
+
+                    <a href="/test/matching" class="play-btn">
+                        Play
+                    </a>
+
+                </div>
+
+                <div class="game-card">
+
+                    <div class="game-icon">
+                        📝
+                    </div>
+
+                    <h3>
+                        Word Recall
+                    </h3>
+
+                    <p>
+                        Strengthen recall and focus.
+                    </p>
+
+                    <a href="/test/words" class="play-btn">
+                        Play
+                    </a>
+
+                </div>
+
+                <div class="game-card">
+
+                    <div class="game-icon">
+                        💡
+                    </div>
+
+                    <h3>
+                        Pattern
+                    </h3>
+
+                    <p>
+                        Train sequence recognition skills.
+                    </p>
+
+                    <a href="/test/pattern" class="play-btn">
+                        Play
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ASSESSMENT -->
+
+        <!-- ASSESSMENT -->
+
+<div
+    id="assessment"
+    class="history-section"
+>
+
+    <div class="section-title">
+        Cognitive Assessment
+    </div>
+
+    <form method="POST" action="/assessment">
+
+        <div class="games-grid">
+
+            {% for i in range(1,11) %}
+
+            <div class="game-card">
+
+                <p>
+
+                {% if i == 1 %}
+                    1. Do you forget recent conversations or events?
+
+                {% elif i == 2 %}
+                    2. Do you misplace items frequently?
+
+                {% elif i == 3 %}
+                    3. Do you struggle with daily routine activities?
+
+                {% elif i == 4 %}
+                    4. Do you feel confused about date or time?
+
+                {% elif i == 5 %}
+                    5. Do you get lost in familiar places?
+
+                {% elif i == 6 %}
+                    6. Do you have difficulty finding correct words?
+
+                {% elif i == 7 %}
+                    7. Do you repeat the same questions often?
+
+                {% elif i == 8 %}
+                    8. Do you struggle to concentrate or focus?
+
+                {% elif i == 9 %}
+                    9. Do you feel confused while handling money or bills?
+
+                {% elif i == 10 %}
+                    10. Do you need help from others for daily tasks?
+
+                {% endif %}
+
+                </p>
+
+                <select
+                    name="q{{ i }}"
+                    required
+                >
+
+                    <option value="0">No</option>
+                    <option value="1">Sometimes</option>
+                    <option value="2">Often</option>
+
+                </select>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <button
+            type="submit"
+            class="play-btn"
+        >
+
+            Assess Cognitive Stage
+
+        </button>
+
+    </form>
+
+</div>
+
+        <!-- HISTORY -->
+
+        <div
+            id="history"
+            class="history-section"
+        >
+
+            <div class="section-title">
+                Test History
+            </div>
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Date</th>
+                        <th>Game</th>
+                        <th>Score</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for row in history %}
+
+                    <tr>
+
+                        <td>
+                            {{ row['date'] }}
+                        </td>
+
+                        <td>
+                            {{ row['game'] }}
+                        </td>
+
+                        <td>
+
+                            <span
+                                class="score-badge"
+                                style="
+                                    background:
+                                    {% if row['score'] >= 80 %}
+                                        #16a34a
+                                    {% elif row['score'] >= 50 %}
+                                        #eab308
+                                    {% else %}
+                                        #dc2626
+                                    {% endif %}
+                                "
+                            >
+
+                                {{ row['score'] }}
+
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- LIVE LOCATION -->
+
+        <div
+            id="location"
+            class="history-section"
+        >
+
+            <div class="section-title">
+                Live Location
+            </div>
+
+            <iframe
+                id="googleMap"
+                loading="lazy"
+                allowfullscreen>
+            </iframe>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- GOOGLE MAP SCRIPT -->
+
+<script>
+
+function shareLocation(){
+
+    if(navigator.geolocation){
+
+        navigator.geolocation.getCurrentPosition(
+
+            async function(position){
+
+                let lat = position.coords.latitude;
+                let lng = position.coords.longitude;
+
+                document.getElementById("googleMap").src =
+
+                    `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+
+                await fetch(
+
+                    "/save_location",
+
+                    {
+
+                        method:"POST",
+
+                        headers:{
+                            "Content-Type":"application/json"
+                        },
+
+                        body:JSON.stringify({
+
+                            latitude: lat,
+
+                            longitude: lng
+
+                        })
+
+                    }
+
+                );
+
+            }
+
+        );
+
+    }
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - MemoryLog</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script>
+        function toggleFields() {
+            var role = document.getElementById("roleSelect").value;
+            var patientField = document.getElementById("patientField");
+            
+            // Show field ONLY if role is 'caregiver'
+            if (role === "caregiver") {
+                patientField.style.display = "block";
+            } else {
+                patientField.style.display = "none";
+                document.getElementById("patientInput").value = ""; 
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient">
+    <div class="auth-box">
+        <h1 style="color:var(--primary);">Create Account</h1>
+        <p style="color:#666;">Join MemoryLog</p>
+        
+        {% if error %}
+            <p style="color:red; background:#ffe6e6; padding:10px;">{{ error }}</p>
+        {% endif %}
+        
+        <form action="/register" method="POST">
+            <input type="text" name="username" placeholder="Choose a Username" required>
+            <input type="password" name="password" placeholder="Choose a Password" required>
+            
+            <label style="display:block; text-align:left; margin-top:10px; color:#666;">I am a:</label>
+            <select id="roleSelect" name="role" onchange="toggleFields()" style="width:100%; padding:10px; margin-bottom:15px;">
+                <option value="patient">User (Patient)</option>
+                <option value="caregiver">Caregiver</option>
+                </select>
+            
+            <div id="patientField" style="display:none;">
+                <label style="display:block; text-align:left; color:#666; font-size:0.9em;">Patient's Username I am monitoring:</label>
+                <input type="text" id="patientInput" name="patient_link" placeholder="e.g. grandpa_joe">
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width:100%;">Sign Up</button>
+        </form>
+
+        <p style="margin-top:20px;">
+            Already have an account? <a href="/">Login here</a>
+        </p>
+    </div>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Register - MemoryLog</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+    <script>
+
+        function toggleFields(){
+
+            var role = document.getElementById("roleSelect").value;
+
+            var patientField =
+                document.getElementById("patientField");
+
+            if(role === "caregiver"){
+                patientField.style.display = "block";
+            }
+            else{
+                patientField.style.display = "none";
+            }
+        }
+
+    </script>
+
+    <style>
+
+        body{
+            margin:0;
+            padding:0;
+
+            font-family:'Poppins', sans-serif;
+
+            height:100vh;
+
+            display:flex;
+            justify-content:center;
+            align-items:center;
+
+            background: linear-gradient(to right, #0f1b4c, #243b9f);
+        }
+
+        .register-box{
+
+            width:460px;
+
+            background:#f5f5f5;
+
+            padding:45px;
+
+            border-radius:18px;
+
+            box-shadow:0 15px 35px rgba(0,0,0,0.25);
+        }
+
+        .register-box h2{
+            text-align:center;
+            margin-bottom:28px;
+            font-size:40px;
+        }
+
+        .register-box label{
+            display:block;
+            margin-top:16px;
+            margin-bottom:8px;
+
+            font-size:16px;
+            color:#222;
+        }
+
+        .register-box input,
+        .register-box select{
+
+            width:100%;
+
+            padding:14px;
+
+            border:1px solid #ccc;
+            border-radius:10px;
+
+            font-size:15px;
+
+            outline:none;
+
+            box-sizing:border-box;
+        }
+
+        .register-box input:focus,
+        .register-box select:focus{
+
+            border:2px solid #2f5bea;
+        }
+
+        .register-btn{
+
+            width:100%;
+
+            padding:14px;
+
+            margin-top:28px;
+
+            background:#2f5bea;
+            color:white;
+
+            border:none;
+            border-radius:10px;
+
+            font-size:16px;
+
+            cursor:pointer;
+
+            transition:0.3s;
+        }
+
+        .register-btn:hover{
+            background:#1f49d8;
+        }
+
+        .bottom-text{
+            text-align:center;
+            margin-top:20px;
+            font-size:16px;
+        }
+
+        .bottom-text a{
+            color:#2f5bea;
+            text-decoration:none;
+            font-weight:600;
+        }
+
+        .error-box{
+            background:#ffe1e1;
+            color:red;
+            padding:12px;
+            border-radius:8px;
+            text-align:center;
+            margin-bottom:15px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="register-box">
+
+        <h2>📝 Register</h2>
+
+        {% if error %}
+            <div class="error-box">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form action="/register" method="POST">
+
+            <label>Name</label>
+
+            <input
+                type="text"
+                name="username"
+                placeholder="Enter your name"
+                required
+            >
+
+            <label>Password</label>
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Enter password"
+                required
+            >
+
+            <label>Role</label>
+
+            <select
+                id="roleSelect"
+                name="role"
+                onchange="toggleFields()"
+                required
+            >
+
+                <option value="">Select Role</option>
+
+                <option value="patient">
+                    Patient
+                </option>
+
+                <option value="caregiver">
+                    Caregiver
+                </option>
+
+            </select>
+
+            <div
+                id="patientField"
+                style="display:none;"
+            >
+
+                <label>Patient Username</label>
+
+                <input
+                    type="text"
+                    name="patient_link"
+                    placeholder="Enter patient username"
+                >
+
+            </div>
+
+            <button
+                type="submit"
+                class="register-btn"
+            >
+
+                Register
+
+            </button>
+
+        </form>
+
+        <div class="bottom-text">
+
+            Already have account?
+
+            <a href="/">Login</a>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+__pycache__/ >.gitignore
+echo *.pyc >>.gitignore
+echo database.json >>.gitignore
+git add .
+git commit -m Initial commit -MemoryLog project
+git remote add oragin https://github.com/Anushkakapase/MemoryLog.git
+git branch -M main
+git push -U oragin main
+echo __pycache__/
+*.pyc
+database.json
